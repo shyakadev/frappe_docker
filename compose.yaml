@@ -12,10 +12,10 @@ services:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      DB_HOST: db
+      DB_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: admin
+      MARIADB_ROOT_PASSWORD: admin
 
   configurator:
     image: frappe/erpnext:v15.60.0
@@ -37,10 +37,10 @@ services:
         bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
         bench set-config -gp socketio_port $$SOCKETIO_PORT;
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      REDIS_CACHE: ${REDIS_CACHE:-redis-cache:6379}
-      REDIS_QUEUE: ${REDIS_QUEUE:-redis-queue:6379}
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
       SOCKETIO_PORT: "9000"
     volumes:
       - sites:/home/frappe/frappe-bench/sites
@@ -61,9 +61,9 @@ services:
       - -c
     command:
       - >
-        wait-for-it -t 120 ${DB_HOST}:3306;
-        wait-for-it -t 120 ${REDIS_CACHE:-redis-cache}:6379;
-        wait-for-it -t 120 ${REDIS_QUEUE:-redis-queue}:6379;
+        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 redis-cache:6379;
+        wait-for-it -t 120 redis-queue:6379;
         export start=`date +%s`;
         until [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".db_host // empty"` ]] && \
           [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_cache // empty"` ]] && \
@@ -116,7 +116,7 @@ services:
       BACKEND: backend:8000
       FRAPPE_SITE_NAME_HEADER: frontend
       SOCKETIO: websocket:9000
-      # UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
       UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
       UPSTREAM_REAL_IP_RECURSIVE: "off"
       PROXY_READ_TIMEOUT: 120
